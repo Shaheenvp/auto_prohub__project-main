@@ -250,7 +250,7 @@ class _servicesState extends State<services> {
                padding: const EdgeInsets.all(8.0),
                child: GestureDetector(
                  onTap: (){
-                   Navigator.push(context, MaterialPageRoute(builder: (context)=>usedcars()));
+                   // Navigator.push(context, MaterialPageRoute(builder: (context)=>usedcars()));
                  },
                  child: Card(
                    elevation: 7,

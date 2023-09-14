@@ -249,7 +249,7 @@ class _usedcarsState extends State<usedcars> {
                         image: DecorationImage(image: AssetImage('assets/services/us.png'),fit: BoxFit.fitWidth)
                       ),
                     ),
-                  
+
                   Padding(
                     padding: const EdgeInsets.only(left: 12,right: 12,top: 15),
                     child: TextField(
@@ -290,7 +290,8 @@ class _usedcarsState extends State<usedcars> {
                      return
                        GestureDetector(
                          onTap: (){
-                       Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel[index]['img'],
+                       Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(
+                           img: usedcarmodel[index]['img'],
                            name: usedcarmodel[index]['name'],
                            dis: usedcarmodel[index]['dis'],
                            rate: usedcarmodel[index]['rate'],
@@ -313,7 +314,7 @@ class _usedcarsState extends State<usedcars> {
                                        borderRadius: BorderRadius.circular(15),
 
                                    ),
-                                 
+
                      ),
                              ),
                              Padding(

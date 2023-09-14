@@ -17,6 +17,8 @@ class _add_rentbikeState extends State<add_rentbike> {
   TextEditingController vnamectrl=TextEditingController();
   TextEditingController brandname=TextEditingController();
   TextEditingController price=TextEditingController();
+  String _selectedsegment = 'Scooter';
+  List<String> segment = ['Scooter', 'Bike', 'Premium Bikes', ];
 
   PageController pageController = PageController(initialPage: 0);
 
@@ -32,7 +34,7 @@ class _add_rentbikeState extends State<add_rentbike> {
   Future sendData(File imageFile) async {
     print(vnamectrl.text);
     print(brandname.text);
-
+    print(_selectedsegment);
 
     print(price.text);
 
@@ -46,6 +48,7 @@ class _add_rentbikeState extends State<add_rentbike> {
     request.fields['vehicle_name'] = vnamectrl.text;
     request.fields['brand_name'] = brandname.text;
     request.fields['price'] = price.text.toString();
+    request.fields['segment'] = _selectedsegment;
     request.fields['type'] = widget.type;
 
     var pic = await await http.MultipartFile.fromPath("img", imageFile.path);
@@ -135,6 +138,33 @@ class _add_rentbikeState extends State<add_rentbike> {
                 ),
               ),
 
+              SizedBox(height: 10,),
+              Padding(
+                padding: const EdgeInsets.only(left: 35,right: 35),
+
+                child: Center(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedsegment,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedsegment = newValue!;
+                      });
+                    },
+                    dropdownColor: Colors.white, // Change the background color here
+
+                    items: segment.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                          child: Text(value,style: TextStyle(color: Colors.black,fontSize: 16),),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
               SizedBox(height: 10,),
 
               SizedBox(

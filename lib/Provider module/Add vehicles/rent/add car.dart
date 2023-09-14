@@ -3,7 +3,6 @@ import 'package:http/http.dart'as http;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../../../user_module/Connection/connect.dart';
 class add_rentcar extends StatefulWidget {
   add_rentcar({super.key,required this.type});
@@ -17,6 +16,9 @@ class _add_rentcarState extends State<add_rentcar> {
   TextEditingController vnamectrl=TextEditingController();
   TextEditingController brandname=TextEditingController();
   TextEditingController price=TextEditingController();
+  TextEditingController segmentctrl=TextEditingController();
+  String _selectedsegment = 'Sedan';
+  List<String> segment = ['Sedan', 'Suv', 'Compact Suv', 'Hatchback',];
 
   PageController pageController = PageController(initialPage: 0);
 
@@ -32,7 +34,7 @@ class _add_rentcarState extends State<add_rentcar> {
   Future sendData(File imageFile) async {
     print(vnamectrl.text);
     print(brandname.text);
-
+    print(_selectedsegment);
 
     print(price.text);
 
@@ -46,6 +48,8 @@ class _add_rentcarState extends State<add_rentcar> {
     request.fields['vehicle_name'] = vnamectrl.text;
     request.fields['brand_name'] = brandname.text;
     request.fields['price'] = price.text.toString();
+    request.fields['segment'] = _selectedsegment;
+
     request.fields['type'] = widget.type;
 
     var pic = await await http.MultipartFile.fromPath("img", imageFile.path);
@@ -135,6 +139,33 @@ class _add_rentcarState extends State<add_rentcar> {
                 ),
               ),
 
+              SizedBox(height: 10,),
+              Padding(
+                padding: const EdgeInsets.only(left: 35,right: 35),
+
+                child: Center(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedsegment,
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedsegment = newValue!;
+                      });
+                    },
+                    dropdownColor: Colors.white, // Change the background color here
+
+                    items: segment.map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                          child: Text(value,style: TextStyle(color: Colors.black,fontSize: 16),),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
               SizedBox(height: 10,),
 
               SizedBox(

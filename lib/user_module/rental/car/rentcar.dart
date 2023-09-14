@@ -1,8 +1,14 @@
 
+import 'dart:convert';
+
+import 'package:autoprohub/user_module/connection/connect.dart';
+import 'package:autoprohub/user_module/rental/car/car_detailpage_rental.dart';
 import 'package:autoprohub/user_module/rental/car/rentads.dart';
 import 'package:autoprohub/user_module/rental/car/rentcarmodel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/http.dart';
 import '../../../navbar.dart';
 import '../../home/feedback.dart';
 import '../../login/login.dart';
@@ -19,6 +25,42 @@ class rentcar extends StatefulWidget {
 }
 
 class _rentcarState extends State<rentcar> {
+  List <String>segments = [];
+  Future<List<dynamic>> getdata(String segment) async{
+    var response = await post(Uri.parse('${Con.url}/rental/view_rentcar.php'),
+    body: {
+      'segment':segment
+    });
+    print(response.body);
+
+    return jsonDecode(response.body);
+  }
+  Future <void> getsegment() async {
+    var response = await get(
+        Uri.parse('${Con.url}/rental/view_segment_car.php'));
+    print(response.body);
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      final List<String> fetchedSegments = data.map((segmentMap) {
+        return segmentMap['segment'] as String;
+      }).toList();
+      setState(() {
+        segments = fetchedSegments;
+      });
+    }
+
+
+
+    else {
+      throw Exception('failed to load segments');
+    }
+  }
+  @override
+  void initState()
+  {
+    super.initState();
+    getsegment();
+  }
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
@@ -259,328 +301,352 @@ class _rentcarState extends State<rentcar> {
                     ],
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Sedan',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                      IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                    ],
-                  ),
-                ),
                 Container(
-                  height: 220,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: rentcarmodel.length,
-                      itemBuilder: (context,index){
-                        return
-                          GestureDetector(
-                            onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel[index]['img'],
-                              name: usedcarmodel[index]['name'],
-                              dis: usedcarmodel[index]['dis'],
-                              rate: usedcarmodel[index]['rate'],
-                              cc: usedcarmodel[index]['cc'],
-                              milege: usedcarmodel[index]['milege'],
-                              disc: usedcarmodel[index]['disc'],
-                              year: usedcarmodel[index]['year'])));
-                        },
-                        child:
-                          Card(
-                            elevation: 4,
-                            child: Stack(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 200,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
+                  height: MediaQuery.of(context).size.height-400,
+                  child: ListView.builder
+                    (
+                      itemCount: segments.length,
+                      //physics: NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      itemBuilder: (context,index)
+                  {
+                    return  Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(segments[index],style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+                              IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 220,
+                          width: MediaQuery.of(context).size.width,
+                          child: FutureBuilder(future: getdata( segments[index]
+                            // segments[index]
+                          ),
+                              builder: (context, snapshot) {
+                                return ListView.builder(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: snapshot.data!.length,
+                                    itemBuilder: (context,index){
+                                      return
+                                        GestureDetector(
+                                            onTap: (){
+                                              Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car_rental(
 
-                                      ),
+                                                  name: snapshot.data![index]['vehicle_name'],
+                                                  dis: snapshot.data![index]['fuel'],
+                                                  rate:snapshot.data![index]['price'],
+                                                  img: snapshot.data![index]['img'],
+                                                 )));
+                                            },
+                                            child:
+                                            Card(
+                                              elevation: 4,
+                                              child: Stack(
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Container(
+                                                        height: 200,
+                                                        width: 200,
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(15),
 
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 122,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel[index]['img']}'),fit: BoxFit.cover),
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                    child: Text('${rentcarmodel[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                    child: Text('${rentcarmodel[index]['dis']}'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                    child: Text('${rentcarmodel[index]['rate']}'),
-                                  ),
+                                                        ),
 
-                                ]),
-                          ));
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.all(8.0),
+                                                      child: Container(
+                                                        height: 122,
+                                                        width: 200,
+                                                        decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(15),
+                                                            image: DecorationImage(image: NetworkImage('${Con.url}/Provider module/rent_vehicle/${snapshot.data![index]['img']}'),fit: BoxFit.cover),
+                                                            color: Colors.blue
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 8.0,top: 130),
+                                                      child: Text('${snapshot.data![index]['vehicle_name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 8.0,top: 150),
+                                                      child: Text('${snapshot.data![index]['fuel']}'),
+                                                    ),
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 8.0,top: 180),
+                                                      child: Text('${snapshot.data![index]['price']}'),
+                                                    ),
+
+                                                  ]),
+                                            ));
 
 
 
-                      }
+                                    }
+                                );
+                              }
+                          ),
+                        ),
+
+                      ],
+                    );
+                  }
                   ),
                 ),
-                SizedBox(height: 10,),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Hatchback',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                      IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                    ],
-                  ),
-                ),
-                Container(
-                  height: 220,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: rentcarmodel1.length,
-                      itemBuilder: (context,index){
-                        return
-                          GestureDetector(
-                            onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel1[index]['img'],
-                              name: usedcarmodel1[index]['name'],
-                              dis: usedcarmodel1[index]['dis'],
-                              rate: usedcarmodel1[index]['rate'],
-                              cc: usedcarmodel1[index]['cc'],
-                              milege: usedcarmodel1[index]['milege'],
-                              disc: usedcarmodel1[index]['disc'],
-                              year: usedcarmodel1[index]['year'])));
-                        },
-                        child:
-                          Card(
-                            elevation: 4,
-                            child: Stack(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 200,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
 
-                                      ),
+                // SizedBox(height: 10,),
+                // Padding(
+                //   padding: const EdgeInsets.all(8.0),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text('Hatchback',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+                //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+                //     ],
+                //   ),
+                // ),
+                // Container(
+                //   height: 220,
+                //   width: MediaQuery.of(context).size.width,
+                //   child: ListView.builder(
+                //       scrollDirection: Axis.horizontal,
+                //       itemCount: rentcarmodel1.length,
+                //       itemBuilder: (context,index){
+                //         return
+                //           GestureDetector(
+                //             onTap: (){
+                //           Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel1[index]['img'],
+                //               name: usedcarmodel1[index]['name'],
+                //               dis: usedcarmodel1[index]['dis'],
+                //               rate: usedcarmodel1[index]['rate'],
+                //               cc: usedcarmodel1[index]['cc'],
+                //               milege: usedcarmodel1[index]['milege'],
+                //               disc: usedcarmodel1[index]['disc'],
+                //               year: usedcarmodel1[index]['year'])));
+                //         },
+                //         child:
+                //           Card(
+                //             elevation: 4,
+                //             child: Stack(
+                //                 children: [
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 200,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                         borderRadius: BorderRadius.circular(15),
+                //
+                //                       ),
+                //
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 122,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                           borderRadius: BorderRadius.circular(15),
+                //                           image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel1[index]['img']}'),fit: BoxFit.cover),
+                //                           color: Colors.blue
+                //                       ),
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 130),
+                //                     child: Text('${rentcarmodel1[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 150),
+                //                     child: Text('${rentcarmodel1[index]['dis']}'),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 180),
+                //                     child: Text('${rentcarmodel1[index]['rate']}'),
+                //                   ),
+                //
+                //                 ]),
+                //           ));
+                //
+                //
+                //
+                //       }
+                //   ),
+                // ),
+                // SizedBox(height: 10,),
+                // Padding(
+                //   padding: const EdgeInsets.all(8.0),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text('Compact SUV',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+                //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+                //     ],
+                //   ),
+                // ),
+                // Container(
+                //   height: 220,
+                //   width: MediaQuery.of(context).size.width,
+                //   child: ListView.builder(
+                //       scrollDirection: Axis.horizontal,
+                //       itemCount: rentcarmodel2.length,
+                //       itemBuilder: (context,index){
+                //         return
+                //           GestureDetector(
+                //             onTap: (){
+                //           Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel2[index]['img'],
+                //               name: usedcarmodel2[index]['name'],
+                //               dis: usedcarmodel2[index]['dis'],
+                //               rate: usedcarmodel2[index]['rate'],
+                //               cc: usedcarmodel2[index]['cc'],
+                //               milege: usedcarmodel2[index]['milege'],
+                //               disc: usedcarmodel2[index]['disc'],
+                //               year: usedcarmodel2[index]['year'])));
+                //         },
+                //         child:
+                //           Card(
+                //             elevation: 4,
+                //             child: Stack(
+                //                 children: [
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 200,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                         borderRadius: BorderRadius.circular(15),
+                //
+                //                       ),
+                //
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 122,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                           borderRadius: BorderRadius.circular(15),
+                //                           image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel2[index]['img']}'),fit: BoxFit.cover),
+                //                           color: Colors.blue
+                //                       ),
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 130),
+                //                     child: Text('${rentcarmodel2[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 150),
+                //                     child: Text('${rentcarmodel2[index]['dis']}'),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 180),
+                //                     child: Text('${rentcarmodel2[index]['rate']}'),
+                //                   ),
+                //
+                //                 ]),
+                //           )
+                //           );
+                //
+                //
+                //
+                //       }
+                //   ),
+                // ),
+                // SizedBox(height: 10,),
+                // Padding(
+                //   padding: const EdgeInsets.all(8.0),
+                //   child: Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       Text('SUV',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+                //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+                //     ],
+                //   ),
+                // ),
+                // Container(
+                //   height: 220,
+                //   width: MediaQuery.of(context).size.width,
+                //   child: ListView.builder(
+                //       scrollDirection: Axis.horizontal,
+                //       itemCount: rentcarmodel3.length,
+                //       itemBuilder: (context,index){
+                //         return
+                //           GestureDetector(
+                //             onTap: (){
+                //           Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel3[index]['img'],
+                //               name: usedcarmodel3[index]['name'],
+                //               dis: usedcarmodel3[index]['dis'],
+                //               rate: usedcarmodel3[index]['rate'],
+                //               cc: usedcarmodel3[index]['cc'],
+                //               milege: usedcarmodel3[index]['milege'],
+                //               disc: usedcarmodel3[index]['disc'],
+                //               year: usedcarmodel3[index]['year'])));
+                //         },
+                //         child:
+                //           Card(
+                //             elevation: 4,
+                //             child: Stack(
+                //                 children: [
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 200,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                         borderRadius: BorderRadius.circular(15),
+                //
+                //                       ),
+                //
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.all(8.0),
+                //                     child: Container(
+                //                       height: 122,
+                //                       width: 200,
+                //                       decoration: BoxDecoration(
+                //                           borderRadius: BorderRadius.circular(15),
+                //                           image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel3[index]['img']}'),fit: BoxFit.cover),
+                //                           color: Colors.blue
+                //                       ),
+                //                     ),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 130),
+                //                     child: Text('${rentcarmodel3[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 150),
+                //                     child: Text('${rentcarmodel3[index]['dis']}'),
+                //                   ),
+                //                   Padding(
+                //                     padding: const EdgeInsets.only(left: 8.0,top: 180),
+                //                     child: Text('${rentcarmodel3[index]['rate']}'),
+                //                   ),
+                //
+                //                 ]),
+                //           )
+                //           );
+                //
+                //
+                //
+                //       }
+                //   ),
+                // ),
 
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 122,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel1[index]['img']}'),fit: BoxFit.cover),
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                    child: Text('${rentcarmodel1[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                    child: Text('${rentcarmodel1[index]['dis']}'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                    child: Text('${rentcarmodel1[index]['rate']}'),
-                                  ),
-
-                                ]),
-                          ));
-
-
-
-                      }
-                  ),
-                ),
-                SizedBox(height: 10,),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Coompact SUV',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                      IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                    ],
-                  ),
-                ),
-                Container(
-                  height: 220,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: rentcarmodel2.length,
-                      itemBuilder: (context,index){
-                        return
-                          GestureDetector(
-                            onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel2[index]['img'],
-                              name: usedcarmodel2[index]['name'],
-                              dis: usedcarmodel2[index]['dis'],
-                              rate: usedcarmodel2[index]['rate'],
-                              cc: usedcarmodel2[index]['cc'],
-                              milege: usedcarmodel2[index]['milege'],
-                              disc: usedcarmodel2[index]['disc'],
-                              year: usedcarmodel2[index]['year'])));
-                        },
-                        child:
-                          Card(
-                            elevation: 4,
-                            child: Stack(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 200,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-
-                                      ),
-
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 122,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel2[index]['img']}'),fit: BoxFit.cover),
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                    child: Text('${rentcarmodel2[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                    child: Text('${rentcarmodel2[index]['dis']}'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                    child: Text('${rentcarmodel2[index]['rate']}'),
-                                  ),
-
-                                ]),
-                          )
-                          );
-
-
-
-                      }
-                  ),
-                ),
-                SizedBox(height: 10,),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('SUV',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                      IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                    ],
-                  ),
-                ),
-                Container(
-                  height: 220,
-                  width: MediaQuery.of(context).size.width,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: rentcarmodel3.length,
-                      itemBuilder: (context,index){
-                        return
-                          GestureDetector(
-                            onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_car(img: usedcarmodel3[index]['img'],
-                              name: usedcarmodel3[index]['name'],
-                              dis: usedcarmodel3[index]['dis'],
-                              rate: usedcarmodel3[index]['rate'],
-                              cc: usedcarmodel3[index]['cc'],
-                              milege: usedcarmodel3[index]['milege'],
-                              disc: usedcarmodel3[index]['disc'],
-                              year: usedcarmodel3[index]['year'])));
-                        },
-                        child:
-                          Card(
-                            elevation: 4,
-                            child: Stack(
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 200,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-
-                                      ),
-
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Container(
-                                      height: 122,
-                                      width: 200,
-                                      decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          image: DecorationImage(image: AssetImage('assets/usedcars/${rentcarmodel3[index]['img']}'),fit: BoxFit.cover),
-                                          color: Colors.blue
-                                      ),
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                    child: Text('${rentcarmodel3[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                    child: Text('${rentcarmodel3[index]['dis']}'),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                    child: Text('${rentcarmodel3[index]['rate']}'),
-                                  ),
-
-                                ]),
-                          )
-                          );
-
-
-
-                      }
-                  ),
-                ),
-                SizedBox(height: 15,)
+                SizedBox(height: 20,)
 
               ],
             ),
