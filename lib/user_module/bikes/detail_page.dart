@@ -6,6 +6,7 @@ import 'package:autoprohub/user_module/login/start.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../Connection/connect.dart';
 import '../bikes/usedbikes.dart';
 import '../home/feedback.dart';
 import '../login/login.dart';
@@ -22,6 +23,9 @@ class detail_page_bike extends StatefulWidget {
 }
 
 class _detail_page_bikeState extends State<detail_page_bike> {
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -245,7 +249,7 @@ class _detail_page_bikeState extends State<detail_page_bike> {
               height: 300,
               width: MediaQuery.of(context).size.width,
              decoration: BoxDecoration(
-               image: DecorationImage(image: AssetImage('assets/bikes/${widget.img}'),fit: BoxFit.cover)
+               image: DecorationImage(image: NetworkImage('${Con.url}/Provider module/usedvehicle/${widget.img}'),fit: BoxFit.cover)
              ),
             ),
             Padding(

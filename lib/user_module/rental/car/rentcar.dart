@@ -305,9 +305,10 @@ class _rentcarState extends State<rentcar> {
                   height: MediaQuery.of(context).size.height-400,
                   child: ListView.builder
                     (
+
                       itemCount: segments.length,
+                      scrollDirection: Axis.vertical,
                       //physics: NeverScrollableScrollPhysics(),
-                      shrinkWrap: true,
                       itemBuilder: (context,index)
                   {
                     return  Column(

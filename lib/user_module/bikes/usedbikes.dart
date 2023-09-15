@@ -1,9 +1,13 @@
 
+import 'dart:convert';
+
 import 'package:autoprohub/navbar.dart';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 
+import '../Connection/connect.dart';
 import '../bikes/usedbikes.dart';
 import '../home/feedback.dart';
 import '../login/login.dart';
@@ -23,6 +27,44 @@ class usedbikes extends StatefulWidget {
 }
 
 class _usedbikesState extends State<usedbikes> {
+
+  List <String>segments = [];
+  Future<List<dynamic>> getdata(String segment) async{
+    var response = await post(Uri.parse('${Con.url}/used/view_usedbike.php'),
+        body: {
+          'segment':segment
+        });
+    print(response.body);
+
+    return jsonDecode(response.body);
+  }
+  Future <void> getsegment() async {
+    var response = await get(
+        Uri.parse('${Con.url}/used/view_segment_usedbike.php'));
+    print(response.body);
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      final List<String> fetchedSegments = data.map((segmentMap) {
+        return segmentMap['segment'] as String;
+      }).toList();
+      setState(() {
+        segments = fetchedSegments;
+      });
+    }
+
+
+
+    else {
+      throw Exception('failed to load segments');
+    }
+  }
+  @override
+  void initState()
+  {
+    super.initState();
+    getsegment();
+  }
+
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
@@ -275,78 +317,126 @@ class _usedbikesState extends State<usedbikes> {
               padding: const EdgeInsets.all(8.0),
               child: Text('Vehicle Types',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 23),),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Premium Bikes',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                  IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                ],
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Text('Premium Bikes',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+            //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+            //     ],
+            //   ),
+            // ),
             Container(
-              height: 220,
-              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height-400,
+              // width: MediaQuery.of(context).size.width,
               child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: usedbikemodel1.length,
+                  scrollDirection: Axis.vertical,
+                  shrinkWrap: true,
+                  itemCount: segments.length,
                   itemBuilder: (context,index){
                     return
-                      GestureDetector(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(img: usedbikemodel1[index]['img'],
-                              name: usedbikemodel1[index]['name'],
-                              dis: usedbikemodel1[index]['dis'],
-                              rate: usedbikemodel1[index]['rate'],
-                              cc: usedbikemodel1[index]['cc'],
-                              milege: usedbikemodel1[index]['milege'],
-                              disc: usedbikemodel1[index]['disc'],
-                              year: usedbikemodel1[index]['year'])));
-                        },
-                        child: Card(
-                          elevation: 4,
-                          child: Stack(
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 200,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(15),
+                                Text(segments[index],style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+                                IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+                              ],
+                            ),
+                          ),
+                          Container(
+                            height: 220,
+                            width: MediaQuery.of(context).size.width,
+                            child: FutureBuilder(future: getdata( segments[index]
+                              // segments[index]
+                            ),
+                                builder: (context, snapshot) {
+                                  return ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      shrinkWrap: true,
+                                      itemCount: snapshot.data!.length,
+                                      itemBuilder: (context,index){
+                                        return
+                                          GestureDetector(
+                                              onTap: (){
+                                                // print(snapshot.data![index]['img']);
+                                                // print(snapshot.data![index]['vehicle_name']);
+                                                // print(snapshot.data![index]['fuel']);
+                                                // print(snapshot.data![index]['price']);
+                                                // print(snapshot.data![index]['enginecc']);
+                                                // print(snapshot.data![index]['milege']);
+                                                // print(snapshot.data![index]['kmdriven']);
+                                                // print(snapshot.data![index]['vehicle_year']);
+                                                Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(
 
-                                    ),
+                                                    img: snapshot.data![index]['img'],
+                                                    name: snapshot.data![index]['vehicle_name'],
+                                                    dis: snapshot.data![index]['fuel'],
+                                                    rate: snapshot.data![index]['price'],
+                                                    cc: snapshot.data![index]['enginecc'],
+                                                    milege: snapshot.data![index]['milege'],
+                                                    disc: snapshot.data![index]['kmdriven'],
+                                                    year: snapshot.data![index]['vehicle_year']
+                                                )));
+                                              },
+                                              child:
+                                              Card(
+                                                elevation: 4,
+                                                child: Stack(
+                                                    children: [
+                                                      Padding(
+                                                        padding: const EdgeInsets.all(8.0),
+                                                        child: Container(
+                                                          height: 200,
+                                                          width: 200,
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(15),
 
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 122,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-                                        image: DecorationImage(image: AssetImage('assets/bikes/${usedbikemodel1[index]['img']}'),fit: BoxFit.cover),
-                                        color: Colors.blue
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                  child: Text('${usedbikemodel1[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                  child: Text('${usedbikemodel1[index]['dis']}'),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                  child: Text('${usedbikemodel1[index]['rate']}'),
-                                ),
+                                                          ),
 
-                              ]),
-                        ),
+                                                        ),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.all(8.0),
+                                                        child: Container(
+                                                          height: 122,
+                                                          width: 200,
+                                                          decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(15),
+                                                              image: DecorationImage(image: NetworkImage('${Con.url}/Provider module/usedvehicle/${snapshot.data![index]['img']}'),fit: BoxFit.cover),
+                                                              color: Colors.blue
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(left: 8.0,top: 130),
+                                                        child: Text('${snapshot.data![index]['vehicle_name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(left: 8.0,top: 150),
+                                                        child: Text('${snapshot.data![index]['fuel']}'),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsets.only(left: 8.0,top: 180),
+                                                        child: Text('${snapshot.data![index]['price']}'),
+                                                      ),
+
+                                                    ]),
+                                              ));
+
+
+
+                                      }
+                                  );
+                                }
+                            ),
+                          ),
+
+                        ],
                       );
 
 
@@ -354,166 +444,166 @@ class _usedbikesState extends State<usedbikes> {
                   }
               ),
             ),
-            SizedBox(height: 10,),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Bikes',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                  IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                ],
-              ),
-            ),
-            Container(
-              height: 220,
-              width: MediaQuery.of(context).size.width,
-              child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: usedbikemodel.length,
-                  itemBuilder: (context,index){
-                    return
-                      GestureDetector(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(img: usedbikemodel[index]['img'],
-                              name: usedbikemodel[index]['name'],
-                              dis: usedbikemodel[index]['dis'],
-                              rate: usedbikemodel[index]['rate'],
-                              cc: usedbikemodel[index]['cc'],
-                              milege: usedbikemodel[index]['milege'],
-                              disc: usedbikemodel[index]['disc'],
-                              year: usedbikemodel[index]['year'])));
-                        },
-                        child: Card(
-                          elevation: 4,
-                          child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 200,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(15),
-
-                                    ),
-
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 122,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-                                        image: DecorationImage(image: AssetImage('assets/bikes/${usedbikemodel[index]['img']}'),fit: BoxFit.cover),
-                                        color: Colors.blue
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                  child: Text('${usedbikemodel[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                  child: Text('${usedbikemodel[index]['dis']}'),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                  child: Text('${usedbikemodel[index]['rate']}'),
-                                ),
-
-                              ]),
-                        ),
-                      );
-
-
-
-                  }
-              ),
-            ),
-            SizedBox(height: 10,),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('Scooter',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
-                  IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
-                ],
-              ),
-            ),
-            Container(
-              height: 220,
-              width: MediaQuery.of(context).size.width,
-              child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: usedbikemodel2.length,
-                  itemBuilder: (context,index){
-                    return
-                      GestureDetector(
-                        onTap: (){
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(img: usedbikemodel2[index]['img'],
-                              name: usedbikemodel2[index]['name'],
-                              dis: usedbikemodel2[index]['dis'],
-                              rate: usedbikemodel2[index]['rate'],
-                              cc: usedbikemodel2[index]['cc'],
-                              milege: usedbikemodel2[index]['milege'],
-                              disc: usedbikemodel2[index]['disc'],
-                              year: usedbikemodel2[index]['year'])));
-                        },
-                        child: Card(
-                          elevation: 4,
-                          child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 200,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(15),
-
-                                    ),
-
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    height: 122,
-                                    width: 200,
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(15),
-                                        image: DecorationImage(image: AssetImage('assets/bikes/${usedbikemodel2[index]['img']}'),fit: BoxFit.cover),
-                                        color: Colors.blue
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 130),
-                                  child: Text('${usedbikemodel2[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 150),
-                                  child: Text('${usedbikemodel2[index]['dis']}'),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 8.0,top: 180),
-                                  child: Text('${usedbikemodel2[index]['rate']}'),
-                                ),
-
-                              ]),
-                        ),
-                      );
-
-
-
-                  }
-              ),
-            ),
+            // SizedBox(height: 10,),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Text('Bikes',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+            //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+            //     ],
+            //   ),
+            // ),
+            // Container(
+            //   height: 220,
+            //   width: MediaQuery.of(context).size.width,
+            //   child: ListView.builder(
+            //       scrollDirection: Axis.horizontal,
+            //       itemCount: usedbikemodel.length,
+            //       itemBuilder: (context,index){
+            //         return
+            //           GestureDetector(
+            //             onTap: (){
+            //               Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(img: usedbikemodel[index]['img'],
+            //                   name: usedbikemodel[index]['name'],
+            //                   dis: usedbikemodel[index]['dis'],
+            //                   rate: usedbikemodel[index]['rate'],
+            //                   cc: usedbikemodel[index]['cc'],
+            //                   milege: usedbikemodel[index]['milege'],
+            //                   disc: usedbikemodel[index]['disc'],
+            //                   year: usedbikemodel[index]['year'])));
+            //             },
+            //             child: Card(
+            //               elevation: 4,
+            //               child: Stack(
+            //                   children: [
+            //                     Padding(
+            //                       padding: const EdgeInsets.all(8.0),
+            //                       child: Container(
+            //                         height: 200,
+            //                         width: 200,
+            //                         decoration: BoxDecoration(
+            //                           borderRadius: BorderRadius.circular(15),
+            //
+            //                         ),
+            //
+            //                       ),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.all(8.0),
+            //                       child: Container(
+            //                         height: 122,
+            //                         width: 200,
+            //                         decoration: BoxDecoration(
+            //                             borderRadius: BorderRadius.circular(15),
+            //                             image: DecorationImage(image: AssetImage('assets/bikes/${usedbikemodel[index]['img']}'),fit: BoxFit.cover),
+            //                             color: Colors.blue
+            //                         ),
+            //                       ),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 130),
+            //                       child: Text('${usedbikemodel[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 150),
+            //                       child: Text('${usedbikemodel[index]['dis']}'),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 180),
+            //                       child: Text('${usedbikemodel[index]['rate']}'),
+            //                     ),
+            //
+            //                   ]),
+            //             ),
+            //           );
+            //
+            //
+            //
+            //       }
+            //   ),
+            // ),
+            // SizedBox(height: 10,),
+            // Padding(
+            //   padding: const EdgeInsets.all(8.0),
+            //   child: Row(
+            //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //     children: [
+            //       Text('Scooter',style: TextStyle(fontWeight: FontWeight.w500,fontSize: 17,color: Colors.black54),),
+            //       IconButton(onPressed: (){}, icon: Icon(CupertinoIcons.arrow_right,color: Colors.black54))
+            //     ],
+            //   ),
+            // ),
+            // Container(
+            //   height: 220,
+            //   width: MediaQuery.of(context).size.width,
+            //   child: ListView.builder(
+            //       scrollDirection: Axis.horizontal,
+            //       itemCount: usedbikemodel2.length,
+            //       itemBuilder: (context,index){
+            //         return
+            //           GestureDetector(
+            //             onTap: (){
+            //               Navigator.push(context, MaterialPageRoute(builder: (context)=>detail_page_bike(img: usedbikemodel2[index]['img'],
+            //                   name: usedbikemodel2[index]['name'],
+            //                   dis: usedbikemodel2[index]['dis'],
+            //                   rate: usedbikemodel2[index]['rate'],
+            //                   cc: usedbikemodel2[index]['cc'],
+            //                   milege: usedbikemodel2[index]['milege'],
+            //                   disc: usedbikemodel2[index]['disc'],
+            //                   year: usedbikemodel2[index]['year'])));
+            //             },
+            //             child: Card(
+            //               elevation: 4,
+            //               child: Stack(
+            //                   children: [
+            //                     Padding(
+            //                       padding: const EdgeInsets.all(8.0),
+            //                       child: Container(
+            //                         height: 200,
+            //                         width: 200,
+            //                         decoration: BoxDecoration(
+            //                           borderRadius: BorderRadius.circular(15),
+            //
+            //                         ),
+            //
+            //                       ),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.all(8.0),
+            //                       child: Container(
+            //                         height: 122,
+            //                         width: 200,
+            //                         decoration: BoxDecoration(
+            //                             borderRadius: BorderRadius.circular(15),
+            //                             image: DecorationImage(image: AssetImage('assets/bikes/${usedbikemodel2[index]['img']}'),fit: BoxFit.cover),
+            //                             color: Colors.blue
+            //                         ),
+            //                       ),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 130),
+            //                       child: Text('${usedbikemodel2[index]['name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16),),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 150),
+            //                       child: Text('${usedbikemodel2[index]['dis']}'),
+            //                     ),
+            //                     Padding(
+            //                       padding: const EdgeInsets.only(left: 8.0,top: 180),
+            //                       child: Text('${usedbikemodel2[index]['rate']}'),
+            //                     ),
+            //
+            //                   ]),
+            //             ),
+            //           );
+            //
+            //
+            //
+            //       }
+            //   ),
+            // ),
             SizedBox(height: 15,)
           ])
     )
