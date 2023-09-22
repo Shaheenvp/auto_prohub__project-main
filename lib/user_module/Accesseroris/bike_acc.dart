@@ -1,15 +1,37 @@
+import 'dart:convert';
+
 import 'package:autoprohub/navbar.dart';
 import 'package:autoprohub/user_module/Accesseroris/detail.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+
+import '../Connection/connect.dart';
 class bike_ac extends StatefulWidget {
-  const bike_ac({super.key});
+   bike_ac({super.key,required this.type});
+   var type;
 
   @override
   State<bike_ac> createState() => _bike_acState();
 }
 
 class _bike_acState extends State<bike_ac> {
+var flag=0;
+  Future<dynamic> getdata() async{
+    var response = await post(Uri.parse('${Con.url}/accessories/view_bike_accessories.php'),
+        body: {
+          'type':widget.type
+        });
+    print(response.body);
+    if(jsonDecode(response.body)[0]['result']=='success'){
+      flag=1;
+      return jsonDecode(response.body);
+
+
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,70 +77,68 @@ class _bike_acState extends State<bike_ac> {
               SizedBox(height: 20,),
               Container(
                 height: MediaQuery.of(context).size.height,
-                child: GridView.builder(
-                  itemCount: 10,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                  itemBuilder: (BuildContext context, int index) {
-                    return InkWell(
-                      onTap: (){
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context)=>detail(
-                            name: '${index+1} item',
-                            price: '\$${index+1}0 ',
-                            image: 'assets/acc/ad/ad3.jpg',
-                            stock: ' Available',
-                            offer: '${index+2}0%',
-                            rate: '${index+2}00',
-                          discripton: 'industry. Lorem Ipsum has been the industrys standard dummy'
-                              ' text ever since the 1500s, when an unknown printer '
-                              'took a galley of type and scrambled it to make a type'
-                              ' specimen book. It has survived not only five centuries, '
-                     ,
-                              rating: 5, )));
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Container(
-                          height: 100,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: Colors.black45
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              Container(
-                                height: 100,
-                                width: double.infinity,
-                                child: Image(image: AssetImage('assets/acc/ad/ad3.jpg'),fit: BoxFit.cover,),
+                child: FutureBuilder(future: getdata(),
+                    builder: (context, snapshot) {
+                  print( snapshot.data.length,);
+                  if(snapshot.hasError)print(snapshot.error);
+                  if(!snapshot.hasData||snapshot.data.length==0){
+                   return Center(
+                      child: Text('Nothing to show..'));
+
+                  }
+
+
+                      return flag==1?GridView.builder(
+                        itemCount: snapshot.data!.length,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                        itemBuilder: (BuildContext context, int index) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Container(
+                              height: 100,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: Colors.black45
+                                ),
                               ),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  Text('${index+1} item',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                                  Padding(
-                                    padding: const EdgeInsets.all(5.0),
-                                    child: Text('Stock ${index+2} ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,color: Colors.green),),
+                                  Container(
+                                    height: 100,
+                                    width: double.infinity,
+                                    child: Image(image: NetworkImage('${Con.url}/Provider module/accessories/${snapshot.data![index]['img']}'),fit: BoxFit.cover,),
                                   ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text('\$${index+2}0 ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,decoration:TextDecoration.lineThrough,color: Colors.black45),),
-                                      Text('\$${index+1}0 ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 22),),
+                                      Text('${snapshot.data![index]['Product_name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
+                                      // Padding(
+                                      //   padding: const EdgeInsets.all(5.0),
+                                      //   child: Text('Stock ${index+2} ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,color: Colors.green),),
+                                      // ),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                        children: [
+                                          Text('${snapshot.data![index]['price']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,decoration:TextDecoration.lineThrough,color: Colors.black45),),
+                                          Text('${snapshot.data![index]['offer_price']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 22),),
+                                        ],
+                                      )
+
                                     ],
-                                  )
+                                  ),
+
 
                                 ],
                               ),
-
-
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },),
+                            ),
+                          );
+                        },):
+                      Center(child: CircularProgressIndicator(),)
+                      ;
+                    }
+                ),
               )
             ],
           ),

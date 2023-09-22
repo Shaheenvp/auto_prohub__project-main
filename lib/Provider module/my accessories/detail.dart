@@ -1,7 +1,11 @@
+import 'package:autoprohub/Provider%20module/Add%20accessories/add_accessories.dart';
 import 'package:flutter/material.dart';
+
+import '../../user_module/Connection/connect.dart';
 class car_detail extends StatefulWidget {
-  car_detail({super.key ,required this.id});
-  var id;
+  car_detail({super.key ,required this.id,required this.img,required this.brand_name,required this.offer_price,
+    required this.Product_name,required this.dis,});
+  var id,img,brand_name,offer_price,Product_name,dis;
 
   @override
   State<car_detail> createState() => _car_detailState();
@@ -17,9 +21,11 @@ class _car_detailState extends State<car_detail> {
         leading: IconButton(onPressed: (){
           Navigator.pop(context);
         }, icon: Icon(Icons.arrow_back),color: Colors.black,),
-        title: Text('Headlight ${widget.id}',style: TextStyle(color: Colors.black45),),
+        title: Text('My Accessories',style: TextStyle(color: Colors.black45),),
         actions: [
-          IconButton(onPressed: (){}, icon: Icon(Icons.edit,color: Colors.black45,)),
+          IconButton(onPressed: (){
+            Navigator.push(context, MaterialPageRoute(builder: (context)=>add_accessories()));
+          }, icon: Icon(Icons.edit,color: Colors.black45,)),
           IconButton(onPressed: (){}, icon: Icon(Icons.delete_rounded,color: Colors.red,)),
 
         ],
@@ -36,7 +42,7 @@ class _car_detailState extends State<car_detail> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
             ),
-            child: Image(image: AssetImage('assets/pacc_dt/hd.jpeg'),fit: BoxFit.contain,),
+            child: Image(image: NetworkImage('${Con.url}/Provider module/accessories/${widget.img}'),fit: BoxFit.contain,),
             ),
           ),
           Divider(),
@@ -61,7 +67,7 @@ class _car_detailState extends State<car_detail> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Model',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.grey)),
-                          Text('Headlight ${widget.id}',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.black)),
+                          Text(widget.Product_name,style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.black)),
                         ],
                       ),
                     ),
@@ -71,7 +77,7 @@ class _car_detailState extends State<car_detail> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Brand',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.grey)),
-                          Text('GVAA',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.black)),
+                          Text(widget.brand_name,style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.black)),
                         ],
                       ),
                     ),
@@ -82,15 +88,13 @@ class _car_detailState extends State<car_detail> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Price',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.grey)),
-                          Text('\$${widget.id}000',style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.green),),
+                          Text(widget.offer_price,style: TextStyle(fontSize: 22,fontWeight: FontWeight.bold,color: Colors.green),),
                         ],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text('Lorem Ipsum is simply dummy text of the'
-                          ' printing and typesetting industry. Lorem Ipsum has'
-                          'sheets containing Lorem Ipsum passages, and more recently with desktop',style: TextStyle(fontWeight: FontWeight.w500,color: Colors.grey),),
+                      child: Text(widget.dis,style: TextStyle(fontWeight: FontWeight.w500,color: Colors.grey),),
                     )
 
 

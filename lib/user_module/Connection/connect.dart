@@ -1,5 +1,5 @@
 class Con{
-  static const url='http://192.168.1.56/autoprohub/';
+  static const url='http://192.168.1.42/autoprohub/';
  }
 //
 // // import 'dart:convert';

@@ -1,14 +1,31 @@
+import 'dart:convert';
+
 import 'package:autoprohub/navbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+
+import '../Connection/connect.dart';
 class car extends StatefulWidget {
-  const car({super.key});
+  var type;
+   car({super.key ,required this.type,});
 
   @override
   State<car> createState() => _carState();
 }
 
 class _carState extends State<car> {
+
+  Future<List<dynamic>> getdata() async{
+    var response = await post(Uri.parse('${Con.url}/accessories/view_car_accessories.php'),
+        body: {
+          'type':widget.type
+        });
+    print(response.body);
+
+    return jsonDecode(response.body);
+  }
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,53 +71,57 @@ class _carState extends State<car> {
               SizedBox(height: 20,),
               Container(
                 height: MediaQuery.of(context).size.height,
-                child: GridView.builder(
-                  itemCount: 10,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Container(
-                        height: 100,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                              color: Colors.black45
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            Container(
-                              height: 100,
-                              width: double.infinity,
-                              child: Image(image: AssetImage('assets/acc/ad/ad3.jpg'),fit: BoxFit.cover,),
+                child: FutureBuilder(future: getdata(),
+                  builder: (context, snapshot) {
+                    return GridView.builder(
+                      itemCount: snapshot.data!.length,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
+                      itemBuilder: (BuildContext context, int index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Container(
+                            height: 100,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                  color: Colors.black45
+                              ),
                             ),
-                            Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                Text('${index+1} item',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
-                                Padding(
-                                  padding: const EdgeInsets.all(5.0),
-                                  child: Text('Stock ${index+2} ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,color: Colors.green),),
+                                Container(
+                                  height: 100,
+                                  width: double.infinity,
+                                  child: Image(image: NetworkImage('${Con.url}/Provider module/accessories/${snapshot.data![index]['img']}'),fit: BoxFit.cover,),
                                 ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('\$${index+2}0 ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,decoration:TextDecoration.lineThrough,color: Colors.black45),),
-                                    Text('\$${index+1}0 ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 22),),
+                                    Text('${snapshot.data![index]['Product_name']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 18),),
+                                    // Padding(
+                                    //   padding: const EdgeInsets.all(5.0),
+                                    //   child: Text('Stock ${index+2} ',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 16,color: Colors.green),),
+                                    // ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                      children: [
+                                        Text('${snapshot.data![index]['price']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 20,decoration:TextDecoration.lineThrough,color: Colors.black45),),
+                                        Text('${snapshot.data![index]['offer_price']}',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 22),),
+                                      ],
+                                    )
+
                                   ],
-                                )
+                                ),
+
 
                               ],
                             ),
-
-
-                          ],
-                        ),
-                      ),
-                    );
-                  },),
+                          ),
+                        );
+                      },);
+                  }
+                ),
               )
             ],
           ),
